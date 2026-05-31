@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GenTwin Analytics — Admin Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/suite-nav.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--bg0:#07080A;--bg1:#0C0E13;--bg2:#111520;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--accent:#1EE8A4;--adim:rgba(30,232,164,0.10);--warn:#F59E0B;--danger:#EF4444;--t1:#F1F5F9;--t2:#8B95A8;--ta:#1EE8A4;--f:'Montserrat',system-ui,sans-serif}
 body{font-family:var(--f);background:var(--bg0);color:var(--t1);min-height:100vh}
-a{color:var(--ta);text-decoration:none;font-size:12px;margin-right:12px}
-.nav{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--border);background:var(--bg1)}
+a{color:var(--ta);text-decoration:none}
 .wrap{max-width:1280px;margin:0 auto;padding:24px 20px 60px}
 .filters{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px}
 .filters select{font-family:var(--f);font-size:12px;padding:8px 12px;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--t1)}
@@ -38,8 +38,9 @@ th{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--t2);lette
 .badge.block{background:rgba(239,68,68,0.15);color:var(--danger)}
 </style>
 </head>
-<body>
-<header class="nav"><strong>GenTwin Analytics</strong><div><a href="index.html">Landing</a><a href="operator.html">Operator</a></div></header>
+<body data-suite-page="analytics" data-suite-title="Analytics">
+<div id="suite-nav-mount"></div>
+<script src="assets/suite-nav.js"></script>
 <div class="wrap">
   <div class="filters">
     <select><option>JK Cement — Line 2</option></select>

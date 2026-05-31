@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GenTwin Demo — Interactive Pipeline</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/suite-nav.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -17,14 +18,7 @@
 }
 html,body{height:100%;font-family:var(--f);background:var(--bg0);color:var(--t1);overflow:hidden}
 a{color:var(--ta);text-decoration:none}
-a:hover{text-decoration:underline}
-.app-nav{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--border);background:var(--bg1);flex-shrink:0}
-.app-nav-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;color:var(--t1)}
-.app-nav-links{display:flex;gap:6px;flex-wrap:wrap}
-.app-nav-links a{font-size:11px;font-weight:600;color:var(--t2);padding:5px 10px;border-radius:5px;border:1px solid transparent}
-.app-nav-links a:hover,.app-nav-links a.active{color:var(--t1);border-color:var(--border2);background:var(--bg2);text-decoration:none}
-.app-nav-links a.active{color:var(--ta);border-color:rgba(30,232,164,0.25)}
-.layout{display:grid;grid-template-columns:280px 1fr 340px;height:calc(100vh - 52px)}
+.layout{display:grid;grid-template-columns:280px 1fr 340px;height:calc(100vh - 56px)}
 .panel{border-right:1px solid var(--border);overflow-y:auto;background:var(--bg1)}
 .panel:last-child{border-right:none;border-left:1px solid var(--border)}
 .panel-hd{padding:16px 18px 12px;font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--ta);border-bottom:1px solid var(--border)}
@@ -51,7 +45,7 @@ input[type=range]{width:100%;accent-color:var(--accent);height:4px}
 .tabs{display:flex;border-bottom:1px solid var(--border)}
 .tab{flex:1;padding:12px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:none;border:none;color:var(--t2);cursor:pointer;font-family:var(--f);border-bottom:2px solid transparent}
 .tab.active{color:var(--ta);border-bottom-color:var(--accent)}
-.tab-panel{display:none;padding:16px 18px;font-size:12px;line-height:1.65;color:var(--t2);overflow-y:auto;max-height:calc(100vh - 52px - 44px)}
+.tab-panel{display:none;padding:16px 18px;font-size:12px;line-height:1.65;color:var(--t2);overflow-y:auto;max-height:calc(100vh - 56px - 44px)}
 .tab-panel.active{display:block}
 .tab-panel pre{background:var(--bg0);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:11px;color:var(--t1);overflow-x:auto;white-space:pre-wrap;margin-top:10px}
 .sop-step{padding:8px 0;border-bottom:1px solid var(--border);display:flex;gap:10px}
@@ -63,23 +57,9 @@ input[type=range]{width:100%;accent-color:var(--accent);height:4px}
 @media(max-width:1100px){.layout{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;height:auto;overflow:auto}html,body{overflow:auto;height:auto}.center{min-height:400px}}
 </style>
 </head>
-<body>
-<header class="app-nav" role="navigation" aria-label="Product navigation">
-  <a class="app-nav-brand" href="index.html">
-    <svg width="22" height="22" viewBox="0 0 28 28" fill="none"><path d="M14 3L24 8.5V19.5L14 25L4 19.5V8.5L14 3Z" stroke="#1EE8A4" stroke-width="1.5"/><path d="M14 8L20 11.5V18.5L14 22L8 18.5V11.5L14 8Z" stroke="#1EE8A4" stroke-width="1" fill="rgba(30,232,164,0.08)"/></svg>
-    GenTwin Demo
-  </a>
-  <nav class="app-nav-links">
-    <a href="index.html">Landing</a>
-    <a href="demo.html" class="active">Demo</a>
-    <a href="operator.html">Operator</a>
-    <a href="analytics.html">Analytics</a>
-    <a href="docs.html">Docs</a>
-    <a href="simulator.html">Simulator</a>
-    <a href="deploy.html">Deploy</a>
-    <a href="paper.html">Paper</a>
-  </nav>
-</header>
+<body data-suite-page="demo" data-suite-title="Interactive Demo">
+<div id="suite-nav-mount"></div>
+<script src="assets/suite-nav.js"></script>
 <div class="layout">
   <aside class="panel">
     <div class="panel-hd">Sensor Injection</div>

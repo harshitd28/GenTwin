@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GenTwin Simulator — Fault Injection Lab</title>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/suite-nav.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--bg0:#07080A;--bg1:#0C0E13;--bg2:#111520;--border:rgba(255,255,255,0.06);--accent:#1EE8A4;--adim:rgba(30,232,164,0.10);--danger:#EF4444;--warn:#F59E0B;--t1:#F1F5F9;--t2:#8B95A8;--t3:#4A5268;--ta:#1EE8A4;--f:'Montserrat',system-ui,sans-serif;--mono:'Courier New',monospace}
 body{font-family:var(--f);background:var(--bg0);color:var(--t1)}
-.nav{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--bg1)}
-.grid{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 49px)}
+.grid{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 56px)}
 .left{border-right:1px solid var(--border);padding:16px;overflow-y:auto}
 .right{padding:16px;display:grid;gap:12px}
 .card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px}
@@ -31,8 +31,9 @@ body{font-family:var(--f);background:var(--bg0);color:var(--t1)}
 @media(max-width:900px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
-<body>
-<header class="nav"><strong>GenTwin Simulator</strong><span><a href="demo.html">Demo</a> · <a href="operator.html">Operator</a></span></header>
+<body data-suite-page="simulator" data-suite-title="Simulator">
+<div id="suite-nav-mount"></div>
+<script src="assets/suite-nav.js"></script>
 <div class="grid">
   <div class="left" id="controls"></div>
   <div class="right">

@@ -4,11 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GenTwin Docs — Technical Documentation</title>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/suite-nav.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--bg0:#07080A;--bg1:#0C0E13;--bg2:#111520;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--accent:#1EE8A4;--adim:rgba(30,232,164,0.10);--t1:#F1F5F9;--t2:#8B95A8;--ta:#1EE8A4;--f:'Montserrat',system-ui,sans-serif;--mono:'Courier New',monospace}
-body{font-family:var(--f);background:var(--bg0);color:var(--t1);display:flex;min-height:100vh}
+body{font-family:var(--f);background:var(--bg0);color:var(--t1);display:flex;flex-direction:column;min-height:100vh}
+.docs-shell{display:flex;flex:1;min-width:0;min-height:calc(100vh - 56px)}
 a{color:var(--ta);text-decoration:none}
 .sidebar{width:240px;flex-shrink:0;background:var(--bg1);border-right:1px solid var(--border);padding:20px 0;position:sticky;top:0;height:100vh;overflow-y:auto}
 .sidebar h1{font-size:14px;font-weight:800;padding:0 20px 16px}
@@ -28,10 +30,13 @@ pre{position:relative;background:var(--bg1);border:1px solid var(--border);borde
 .arch-svg{width:100%;max-width:600px;margin:20px 0}
 .version{display:inline-block;font-size:10px;font-weight:700;padding:4px 10px;background:var(--adim);color:var(--ta);border-radius:4px;margin-bottom:24px}
 .hidden{display:none!important}
-@media(max-width:800px){body{flex-direction:column}.sidebar{width:100%;height:auto;position:relative}}
+@media(max-width:800px){.docs-shell{flex-direction:column}.sidebar{width:100%;height:auto;position:relative}}
 </style>
 </head>
-<body>
+<body data-suite-page="docs" data-suite-title="Documentation">
+<div id="suite-nav-mount"></div>
+<script src="assets/suite-nav.js"></script>
+<div class="docs-shell">
 <aside class="sidebar">
   <h1>GenTwin Docs</h1>
   <span class="version">v1.0.0 · IRAI 2026</span>
@@ -50,7 +55,6 @@ pre{position:relative;background:var(--bg1);border:1px solid var(--border);borde
     <a href="#deploy">Deployment</a>
     <a href="#changelog">Changelog</a>
   </nav>
-  <p style="padding:16px 20px;font-size:11px"><a href="index.html">← Landing</a> · <a href="operator.html">Operator</a></p>
 </aside>
 <main class="main" id="content">
   <section id="overview" data-searchable>
@@ -95,6 +99,7 @@ urls = ["http://influx:8086"]</pre>
   </section>
   <section id="changelog" data-searchable><div class="sec-eye">Changelog</div><h2>v1.0.0</h2><p>IRAI 2026 release. Initial operator SCADA, analytics, docs, simulator, deploy wizard.</p></section>
 </main>
+</div>
 <script>
 document.getElementById('search').addEventListener('input',function(){
   const q=this.value.toLowerCase();

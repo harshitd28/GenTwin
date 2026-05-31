@@ -4,11 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GenTwin Deploy — Configuration Builder</title>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/suite-nav.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--bg0:#07080A;--bg1:#0C0E13;--bg2:#111520;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--accent:#1EE8A4;--adim:rgba(30,232,164,0.10);--t1:#F1F5F9;--t2:#8B95A8;--ta:#1EE8A4;--f:'Montserrat',system-ui,sans-serif;--mono:'Courier New',monospace}
-body{font-family:var(--f);background:var(--bg0);color:var(--t1);min-height:100vh;padding:24px}
+body{font-family:var(--f);background:var(--bg0);color:var(--t1);min-height:100vh}
+.wrap{padding:24px clamp(16px,3vw,32px) 60px}
 .wrap{max-width:960px;margin:0 auto}
 h1{font-size:24px;font-weight:800;margin-bottom:8px}
 .steps{display:flex;gap:8px;margin:24px 0;flex-wrap:wrap}
@@ -33,9 +35,10 @@ pre{background:var(--bg0);padding:14px;border-radius:8px;font-family:var(--mono)
 a{color:var(--ta);font-size:12px}
 </style>
 </head>
-<body>
+<body data-suite-page="deploy" data-suite-title="Deploy">
+<div id="suite-nav-mount"></div>
+<script src="assets/suite-nav.js"></script>
 <div class="wrap">
-  <a href="index.html">← GenTwin</a>
   <h1>Deployment Configuration Builder</h1>
   <p style="color:var(--t2);font-size:14px;margin-bottom:24px">Generate plant-specific YAML, Docker Compose, and hardware checklist.</p>
   <div class="steps" id="steps"></div>

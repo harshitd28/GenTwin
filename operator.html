@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GenTwin Operator — SCADA Interface</title>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/suite-nav.css">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--bg0:#07080A;--bg1:#0C0E13;--bg2:#111520;--bg3:#161B28;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--accent:#1EE8A4;--adim:rgba(30,232,164,0.10);--warn:#F59E0B;--danger:#EF4444;--t1:#F1F5F9;--t2:#8B95A8;--t3:#4A5268;--ta:#1EE8A4;--f:'Montserrat',system-ui,sans-serif;--ease:cubic-bezier(0.16,1,0.3,1);--mono:'Courier New',monospace}
@@ -18,7 +19,7 @@ a{color:var(--ta);text-decoration:none}
 .topbar-right{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--t2)}
 .toggle{font-size:11px;font-weight:600;padding:6px 12px;border-radius:6px;border:1px solid var(--border2);background:var(--bg2);color:var(--t2);cursor:pointer;font-family:var(--f)}
 .toggle.on{border-color:var(--accent);color:var(--ta);background:var(--adim)}
-.main{display:grid;grid-template-columns:220px 1fr 260px;grid-template-rows:1fr 100px;height:calc(100vh - 48px - 0px)}
+.main{display:grid;grid-template-columns:220px 1fr 260px;grid-template-rows:1fr 100px;height:calc(100vh - 56px - 48px)}
 .col{overflow-y:auto;border-right:1px solid var(--border);background:var(--bg1)}
 .col:last-child{border-right:none}
 .gauge{padding:12px 14px;border-bottom:1px solid var(--border)}
@@ -60,23 +61,25 @@ a{color:var(--ta);text-decoration:none}
 .drawer-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
 .btn-p{font-size:11px;font-weight:700;padding:8px 16px;border-radius:6px;border:none;background:var(--accent);color:var(--bg0);cursor:pointer;font-family:var(--f)}
 .btn-g{font-size:11px;font-weight:600;padding:8px 16px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--t2);cursor:pointer;font-family:var(--f)}
-.app-links a{font-size:11px;color:var(--t2);margin-left:10px}
+.topbar-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.topbar-tools .toggle{margin:0}
+.topbar-user{font-size:11px;color:var(--t2);white-space:nowrap}
 @media(max-width:1024px){.main{grid-template-columns:1fr;grid-template-rows:auto auto auto 80px}.col,.center-col{max-height:280px}}
 </style>
 </head>
-<body>
+<body data-suite-page="operator" data-suite-title="Operator SCADA">
+<div id="suite-nav-mount"></div>
+<script src="assets/suite-nav.js"></script>
 <header class="topbar">
   <div class="topbar-left">
-    <a href="index.html" style="font-weight:700;color:var(--t1)">GenTwin</a>
     <span class="plant-name">JK Cement — Rotary Kiln Line 2</span>
     <span class="meta">Shift A · <span id="clock">--:--:--</span></span>
     <span class="alert-badge" id="alertCount" aria-live="polite">0 Alerts</span>
   </div>
-  <div class="topbar-right">
+  <div class="topbar-right topbar-tools">
     <button class="toggle on" id="telegramAlerts" type="button" title="Send to @TwinGuardian_Bot">Telegram alerts</button>
     <button class="toggle" id="autoRun" type="button">Auto-run demo</button>
-    <span>Operator: H. Divekar</span>
-    <span class="app-links"><a href="demo.html">Demo</a><a href="analytics.html">Analytics</a></span>
+    <span class="topbar-user">Operator: H. Divekar</span>
   </div>
 </header>
 <div class="main">
