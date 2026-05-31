@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenTwin Simulator — Fault Injection Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg0:#07080A;--bg1:#0C0E13;--bg2:#111520;--border:rgba(255,255,255,0.06);--accent:#1EE8A4;--adim:rgba(30,232,164,0.10);--danger:#EF4444;--warn:#F59E0B;--t1:#F1F5F9;--t2:#8B95A8;--t3:#4A5268;--ta:#1EE8A4;--f:'Montserrat',system-ui,sans-serif;--mono:'Courier New',monospace}
+body{font-family:var(--f);background:var(--bg0);color:var(--t1)}
+.nav{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--bg1)}
+.grid{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 49px)}
+.left{border-right:1px solid var(--border);padding:16px;overflow-y:auto}
+.right{padding:16px;display:grid;gap:12px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px}
+.card-h{font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--ta);margin-bottom:10px;text-transform:uppercase}
+.thresh{font-size:11px;color:var(--warn);margin:8px 0;padding:8px;background:rgba(245,158,11,0.1);border-radius:6px}
+.bar-row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:11px}
+.bar-bg{flex:1;height:8px;background:var(--bg0);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;background:var(--accent)}
+.agent{display:flex;gap:8px;margin:8px 0;opacity:0.35;transition:opacity 0.3s}
+.agent.on{opacity:1}
+.gauge-viz{height:24px;background:var(--bg0);border-radius:4px;position:relative;margin-top:8px}
+.gauge-safe{position:absolute;left:20%;right:30%;top:0;bottom:0;background:rgba(30,232,164,0.2)}
+.gauge-needle{position:absolute;top:-4px;width:3px;height:32px;background:var(--danger);transform:translateX(-50%)}
+.json-out{font-family:var(--mono);font-size:11px;white-space:pre-wrap}
+.kw{color:#1EE8A4}.str{color:#F59E0B}.num{color:#60A5FA}
+.toolbar{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.toolbar button{font-size:11px;font-weight:600;padding:6px 12px;border-radius:5px;border:1px solid var(--border);background:var(--bg1);color:var(--t2);cursor:pointer;font-family:var(--f)}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="nav"><strong>GenTwin Simulator</strong><span><a href="demo.html">Demo</a> · <a href="operator.html">Operator</a></span></header>
+<div class="grid">
+  <div class="left" id="controls"></div>
+  <div class="right">
+    <div class="card"><div class="card-h">Threshold analysis</div><div class="thresh" id="threshMsg">Adjust sensors to see detection rules.</div></div>
+    <div class="card"><div class="card-h">Stage 1 — RF feature importance</div><div id="rfBars"></div></div>
+    <div class="card"><div class="card-h">Stage 2 — Class probabilities</div><div id="xgbBars"></div></div>
+    <div class="card"><div class="card-h">ChromaDB retrieval</div><div id="chunks"></div></div>
+    <div class="card"><div class="card-h">Agent swimlane</div><div id="agents"></div></div>
+    <div class="card"><div class="card-h">Layer 4 — HAZOP pressure</div><div class="gauge-viz"><div class="gauge-safe"></div><div class="gauge-needle" id="needle" style="left:50%"></div></div><p style="font-size:10px;color:var(--t2);margin-top:6px">Safe zone ≤ 130 bar burst threshold</p></div>
+    <div class="card"><div class="card-h">JSON artifact</div><pre class="json-out" id="jsonOut">{}</pre>
+    <div class="toolbar"><button type="button" id="saveCfg">Save config</button><button type="button" id="loadCfg">Load config</button><button type="button" id="exportRun">Export run JSON</button></div></div>
+  </div>
+</div>
+<script>
+const K=(function(){
+  const S=[{id:'PS1',label:'PS1',min:140,max:165,norm:[155,160]},{id:'PS2',label:'PS2',min:90,max:115,norm:[100,105]},{id:'TS1',label:'TS1',min:295,max:310,norm:[298,302]},{id:'TS2',label:'TS2',min:300,max:320,norm:[305,310]},{id:'Torque',label:'Torque',min:20,max:85,norm:[35,55]},{id:'Speed',label:'Speed',min:1200,max:1800,norm:[1400,1600]},{id:'Wear',label:'Wear',min:0,max:250,norm:[0,180]}];
+  const P={normal:{PS1:157.5,PS2:102,TS1:300,TS2:307,Torque:42,Speed:1500,Wear:120},hdf:{PS1:158,PS2:103,TS1:298,TS2:309,Torque:45,Speed:1480,Wear:130}};
+  function run(v){const dT=v.TS2-v.TS1;let code='NORMAL',msg='All sensors within band';if(v.Wear>=200){code='TWF';msg='Wear ≥ 200 min'}else if(dT>8.6){code='HDF';msg='ΔT = '+dT.toFixed(1)+'K > 8.6K → HDF'}else if(v.Torque>72&&v.Speed<1400){code='OSF';msg='Torque > 72 Nm @ low RPM'}else if(v.PS1<140){code='PWF';msg='PS1 below nominal — power failure signature'}const unsafe=v.PS1>130;return{code,msg,unsafe,artifact:{faultCode:code,target_pressure_ps1:unsafe?175:Math.min(130,v.PS1),hazop_status:unsafe?'BLOCK':'PASS'}}}
+  function z(v,s){const m=(s.norm[0]+s.norm[1])/2,r=(s.norm[1]-s.norm[0])/2||1;return((v-m)/r).toFixed(2)}
+  return{S,P,run,z};
+})();
+let state={...K.P.normal};
+const ctrl=document.getElementById('controls');
+K.S.forEach(s=>{
+  const d=document.createElement('div');d.style.marginBottom='12px';
+  d.innerHTML='<label style="font-size:11px;font-weight:600">'+s.id+' <span id="z-'+s.id+'"></span></label><input type="range" data-id="'+s.id+'" min="'+s.min+'" max="'+s.max+'" step="'+(s.id.startsWith('TS')?0.1:1)+'" value="'+state[s.id]+'" style="width:100%">';
+  ctrl.appendChild(d);
+});
+['normal','hdf'].forEach(p=>{const b=document.createElement('button');b.textContent=p;b.className='toolbar';b.style.marginTop='8px';b.onclick=()=>{state={...K.P[p]};sync();update()};ctrl.appendChild(b)});
+function sync(){ctrl.querySelectorAll('input').forEach(i=>{i.value=state[i.dataset.id]})}
+ctrl.addEventListener('input',e=>{if(e.target.dataset.id){state[e.target.dataset.id]=+e.target.value;update()}});
+const agents=['Engineer','Simulation','Safety','Cost/Risk','Planner'];
+document.getElementById('agents').innerHTML=agents.map(a=>'<div class="agent" data-a="'+a+'"><span style="color:var(--ta);font-weight:700">●</span> '+a+' — <span class="out">idle</span></div>').join('');
+function update(){
+  const r=K.run(state);
+  K.S.forEach(s=>{const el=document.getElementById('z-'+s.id);if(el)el.textContent='(z='+K.z(state[s.id],s)+')'});
+  document.getElementById('threshMsg').textContent=r.msg;
+  const feats=[['PS1',state.PS1],['TS delta',state.TS2-state.TS1],['Torque',state.Torque],['Wear',state.Wear]];
+  const max=Math.max(...feats.map(f=>Math.abs(f[1])));
+  document.getElementById('rfBars').innerHTML=feats.map(f=>'<div class="bar-row"><span style="width:70px">'+f[0]+'</span><div class="bar-bg"><div class="bar-fill" style="width:'+(Math.abs(f[1])/max*100)+'%"></div></div></div>').join('');
+  const classes=['NORMAL','HDF','PWF','OSF','TWF','RNF'];
+  const probs=classes.map(c=>c===r.code?0.85:0.03);
+  document.getElementById('xgbBars').innerHTML=classes.map((c,i)=>'<div class="bar-row"><span style="width:50px">'+c+'</span><div class="bar-bg"><div class="bar-fill" style="width:'+(probs[i]*100)+'%"></div></div><span>'+(probs[i]*100).toFixed(0)+'%</span></div>').join('');
+  document.getElementById('chunks').innerHTML=r.code==='NORMAL'?'<p style="font-size:12px;color:var(--t2)">No retrieval — pipeline bypassed.</p>':'<p style="font-size:12px">chk-'+r.code+'-01 · sim=0.89 · FLSmidth_Ch4.pdf §3.2</p><p style="font-size:11px;color:var(--t2)">~80% search space reduction via faultCode</p>';
+  document.getElementById('needle').style.left=Math.min(95,state.PS1/165*100)+'%';
+  const j=r.artifact;document.getElementById('jsonOut').innerHTML=JSON.stringify(j,null,2).replace(/"([^"]+)":/g,'<span class="kw">"$1"</span>:').replace(/: (\d+)/g,': <span class="num">$1</span>').replace(/: "([^"]*)"/g,': <span class="str">"$1"</span>');
+  document.querySelectorAll('.agent').forEach((el,i)=>{el.classList.remove('on');if(r.code!=='NORMAL')setTimeout(()=>{el.classList.add('on');el.querySelector('.out').textContent='complete'},i*400)});
+}
+document.getElementById('saveCfg').onclick=()=>localStorage.setItem('gentwin_sim',JSON.stringify(state));
+document.getElementById('loadCfg').onclick=()=>{const s=localStorage.getItem('gentwin_sim');if(s){state=JSON.parse(s);sync();update()}};
+document.getElementById('exportRun').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({state,result:K.run(state),ts:new Date().toISOString()},null,2)]));a.download='gentwin-run.json';a.click()};
+update();
+</script>
+</body>
+</html>

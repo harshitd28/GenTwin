@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenTwin Operator — SCADA Interface</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg0:#07080A;--bg1:#0C0E13;--bg2:#111520;--bg3:#161B28;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--accent:#1EE8A4;--adim:rgba(30,232,164,0.10);--warn:#F59E0B;--danger:#EF4444;--t1:#F1F5F9;--t2:#8B95A8;--t3:#4A5268;--ta:#1EE8A4;--f:'Montserrat',system-ui,sans-serif;--ease:cubic-bezier(0.16,1,0.3,1);--mono:'Courier New',monospace}
+html,body{height:100%;font-family:var(--f);background:var(--bg0);color:var(--t1);overflow:hidden}
+a{color:var(--ta);text-decoration:none}
+.topbar{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--bg1);border-bottom:1px solid var(--border);flex-shrink:0}
+.topbar-left{display:flex;align-items:center;gap:20px}
+.plant-name{font-size:14px;font-weight:700}
+.meta{font-size:11px;color:var(--t2);font-weight:500}
+.alert-badge{background:var(--danger);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px}
+.topbar-right{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--t2)}
+.toggle{font-size:11px;font-weight:600;padding:6px 12px;border-radius:6px;border:1px solid var(--border2);background:var(--bg2);color:var(--t2);cursor:pointer;font-family:var(--f)}
+.toggle.on{border-color:var(--accent);color:var(--ta);background:var(--adim)}
+.main{display:grid;grid-template-columns:220px 1fr 260px;grid-template-rows:1fr 100px;height:calc(100vh - 48px - 0px)}
+.col{overflow-y:auto;border-right:1px solid var(--border);background:var(--bg1)}
+.col:last-child{border-right:none}
+.gauge{padding:12px 14px;border-bottom:1px solid var(--border)}
+.gauge.anomaly{border-left:3px solid var(--danger);background:rgba(239,68,68,0.06)}
+.gauge-lbl{font-size:10px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:0.08em}
+.gauge-val{font-size:22px;font-weight:800;letter-spacing:-0.03em;margin:4px 0}
+.gauge-band{height:4px;background:var(--bg0);border-radius:2px;position:relative;margin-top:6px}
+.gauge-band-fill{height:100%;background:var(--accent);border-radius:2px;opacity:0.5}
+.gauge-marker{position:absolute;top:-2px;width:6px;height:8px;background:var(--t1);border-radius:1px;transform:translateX(-50%)}
+.center-col{display:flex;flex-direction:column;background:var(--bg0);padding:16px;overflow:hidden}
+.topo-title{font-size:10px;font-weight:700;letter-spacing:0.14em;color:var(--ta);margin-bottom:12px}
+.topo{flex:1;display:flex;align-items:center;justify-content:center;position:relative}
+.topo svg{width:100%;max-width:520px;height:auto}
+.node-pulse rect{stroke:#F59E0B!important}
+@media (prefers-reduced-motion:no-preference){.node-pulse{animation:pulse-node 3s ease-in-out infinite}}
+@keyframes pulse-node{0%,100%{opacity:1}50%{opacity:0.7}}
+.cascade{margin-top:12px;padding:12px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--t2);line-height:1.6}
+.cascade b{color:var(--warn)}
+.alert-item{padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s}
+.alert-item:hover{background:var(--bg2)}
+.alert-item.p3{border-left:3px solid var(--danger)}
+.alert-item.p2{border-left:3px solid var(--warn)}
+.alert-code{font-size:11px;font-weight:800;color:var(--ta);letter-spacing:0.06em}
+.alert-title{font-size:13px;font-weight:600;margin:4px 0}
+.alert-meta{font-size:10px;color:var(--t3)}
+.btn-view{font-size:10px;font-weight:700;margin-top:8px;padding:5px 10px;border:1px solid var(--border2);background:var(--bg0);color:var(--t1);border-radius:5px;cursor:pointer;font-family:var(--f)}
+.spark-row{grid-column:1/-1;display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:8px 12px;background:var(--bg1);border-top:1px solid var(--border)}
+.spark-cell canvas{width:100%;height:72px;display:block;border-radius:4px;background:var(--bg0)}
+.spark-lbl{font-size:9px;color:var(--t3);text-align:center;margin-top:2px;font-weight:600}
+.drawer{position:fixed;left:0;right:0;bottom:0;height:0;background:var(--bg1);border-top:1px solid var(--border2);transition:height 0.45s var(--ease);z-index:100;overflow:hidden}
+.drawer.open{height:min(55vh,420px)}
+.drawer-inner{padding:20px 24px;height:100%;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.drawer-hd{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center}
+.drawer h2{font-size:18px;font-weight:800}
+.drawer-close{background:none;border:none;color:var(--t2);font-size:24px;cursor:pointer}
+.hazop-badge{display:inline-block;padding:4px 12px;border-radius:4px;font-size:11px;font-weight:700}
+.hazop-badge.pass{background:var(--adim);color:var(--accent);border:1px solid rgba(30,232,164,0.3)}
+.drawer pre{font-family:var(--mono);font-size:11px;background:var(--bg0);padding:12px;border-radius:8px;border:1px solid var(--border);overflow:auto}
+.drawer-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.btn-p{font-size:11px;font-weight:700;padding:8px 16px;border-radius:6px;border:none;background:var(--accent);color:var(--bg0);cursor:pointer;font-family:var(--f)}
+.btn-g{font-size:11px;font-weight:600;padding:8px 16px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--t2);cursor:pointer;font-family:var(--f)}
+.app-links a{font-size:11px;color:var(--t2);margin-left:10px}
+@media(max-width:1024px){.main{grid-template-columns:1fr;grid-template-rows:auto auto auto 80px}.col,.center-col{max-height:280px}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" style="font-weight:700;color:var(--t1)">GenTwin</a>
+    <span class="plant-name">JK Cement — Rotary Kiln Line 2</span>
+    <span class="meta">Shift A · <span id="clock">--:--:--</span></span>
+    <span class="alert-badge" id="alertCount" aria-live="polite">0 Alerts</span>
+  </div>
+  <div class="topbar-right">
+    <button class="toggle on" id="telegramAlerts" type="button" title="Send to @TwinGuardian_Bot">Telegram alerts</button>
+    <button class="toggle" id="autoRun" type="button">Auto-run demo</button>
+    <span>Operator: H. Divekar</span>
+    <span class="app-links"><a href="demo.html">Demo</a><a href="analytics.html">Analytics</a></span>
+  </div>
+</header>
+<div class="main">
+  <div class="col" id="gauges"></div>
+  <div class="center-col">
+    <div class="topo-title">System Health Map</div>
+    <div class="topo">
+      <svg viewBox="0 0 500 200" id="topoSvg">
+        <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="rgba(255,255,255,0.3)"/></marker></defs>
+        <line x1="80" y1="100" x2="180" y2="100" stroke="rgba(255,255,255,0.15)" stroke-width="2" marker-end="url(#arr)"/>
+        <line x1="220" y1="100" x2="320" y2="100" stroke="rgba(255,255,255,0.15)" stroke-width="2" marker-end="url(#arr)"/>
+        <line x1="360" y1="100" x2="440" y2="100" stroke="rgba(255,255,255,0.15)" stroke-width="2" marker-end="url(#arr)"/>
+        <g id="n-kiln"><rect x="20" y="70" width="60" height="60" rx="8" fill="var(--bg2)" stroke="#1EE8A4" stroke-width="2"/><text x="50" y="105" text-anchor="middle" fill="#F1F5F9" font-size="10" font-family="Montserrat,sans-serif" font-weight="700">Kiln</text></g>
+        <g id="n-shaft"><rect x="160" y="70" width="80" height="60" rx="8" fill="var(--bg2)" stroke="#1EE8A4" stroke-width="2"/><text x="200" y="105" text-anchor="middle" fill="#F1F5F9" font-size="10" font-family="Montserrat,sans-serif" font-weight="700">Drive Shaft</text></g>
+        <g id="n-bearing"><rect x="300" y="70" width="80" height="60" rx="8" fill="var(--bg2)" stroke="#1EE8A4" stroke-width="2"/><text x="340" y="100" text-anchor="middle" fill="#F1F5F9" font-size="10" font-family="Montserrat,sans-serif" font-weight="700">Bearing B2</text><text x="340" y="115" text-anchor="middle" fill="#8B95A8" font-size="8" font-family="Montserrat,sans-serif" id="p84" opacity="0">P=0.84</text></g>
+        <g id="n-motor"><rect x="420" y="70" width="60" height="60" rx="8" fill="var(--bg2)" stroke="#1EE8A4" stroke-width="2"/><text x="450" y="100" text-anchor="middle" fill="#F1F5F9" font-size="10" font-family="Montserrat,sans-serif" font-weight="700">Motor</text><text x="450" y="115" text-anchor="middle" fill="#8B95A8" font-size="8" font-family="Montserrat,sans-serif" id="p91" opacity="0">P=0.91</text></g>
+      </svg>
+    </div>
+    <div class="cascade" id="cascadeBox">Cascade risk nominal. Monte Carlo forecast idle.</div>
+  </div>
+  <div class="col" id="alertsCol">
+    <div style="padding:12px 14px;font-size:10px;font-weight:700;letter-spacing:0.12em;color:var(--ta);border-bottom:1px solid var(--border)">ACTIVE ALERTS</div>
+    <div id="alertsList"></div>
+  </div>
+  <div class="spark-row" id="sparkRow"></div>
+</div>
+<div class="drawer" id="drawer" role="dialog" aria-label="Recovery plan">
+  <div class="drawer-inner">
+    <div class="drawer-hd"><h2 id="drawerTitle">Recovery Plan</h2><button class="drawer-close" id="drawerClose" aria-label="Close">&times;</button></div>
+    <div><span class="hazop-badge pass" id="drawerHazop">HAZOP PASS</span><p style="font-size:12px;color:var(--t2);margin:12px 0" id="drawerSource"></p><div id="drawerSop"></div><div class="drawer-actions"><button class="btn-p" type="button">Accept Plan</button><button class="btn-g" type="button">Modify &amp; Accept</button><button class="btn-g" type="button">Manual Override</button></div></div>
+    <div><pre id="drawerJson"></pre></div>
+  </div>
+</div>
+<script>
+window.GenTwinKernel=window.GenTwinKernel||(function(){
+  const SENSORS=[{id:'PS1',label:'PS1',unit:'bar',min:140,max:165,norm:[155,160]},{id:'PS2',label:'PS2',unit:'bar',min:90,max:115,norm:[100,105]},{id:'TS1',label:'TS1',unit:'K',min:295,max:310,norm:[298,302]},{id:'TS2',label:'TS2',unit:'K',min:300,max:320,norm:[305,310]},{id:'Torque',label:'Torque',unit:'Nm',min:20,max:85,norm:[35,55]},{id:'Speed',label:'Speed',unit:'rpm',min:1200,max:1800,norm:[1400,1600]},{id:'Wear',label:'Wear',unit:'min',min:0,max:250,norm:[0,180]}];
+  const PRESETS={normal:{PS1:157.5,PS2:102,TS1:300,TS2:307,Torque:42,Speed:1500,Wear:120},pwf:{PS1:128,PS2:98,TS1:301,TS2:308,Torque:38,Speed:1200,Wear:140},hdf:{PS1:158,PS2:103,TS1:298,TS2:309,Torque:45,Speed:1480,Wear:130}};
+  function inNorm(v,s){return v>=s.norm[0]&&v<=s.norm[1]}
+  function stage1(s){return SENSORS.some(x=>!inNorm(s[x.id],x))}
+  function stage2(s){const dT=s.TS2-s.TS1;if(s.Wear>=200)return{code:'TWF',name:'Tool Wear Failure',prio:2};if(dT>8.6)return{code:'HDF',name:'Heat Dissipation Failure',prio:2};if(s.Torque>72&&s.Speed<1400)return{code:'OSF',name:'Overstrain Failure',prio:2};if(s.Torque*s.Speed/9550<35)return{code:'PWF',name:'Power Failure',prio:2};return{code:'RNF',name:'Random Failure',prio:1}}
+  function artifact(s,f,unsafe){return{faultCode:f.code,hazop_status:unsafe?'BLOCK':'PASS',target_pressure_ps1:unsafe?175:Math.min(130,s.PS1),action:f.code==='PWF'?'valve_switching_lag_clear':'mitigation',source_doc:'FLSmidth_Ch4.pdf §3.2',safetyPriority:f.prio}}
+  function sop(f){return['Verify sensor readings against OEM limits','Execute '+f.code+' recovery per FLSmidth Ch.4','Confirm HAZOP PASS before resuming production','Log event to CMMS ticket #auto'].map((t,i)=>({n:i+1,text:t}))}
+  function run(v){const s={...v};if(!stage1(s))return{anomaly:false};const f=stage2(s);const u=s.PS1>130;const a=artifact(s,f,u);return{anomaly:true,fault:f,artifact:a,hazop:a.target_pressure_ps1<=130?'PASS':'BLOCK',sop:sop(f)}}
+  return{SENSORS,PRESETS,run};
+})();
+(function(){
+  const K=window.GenTwinKernel;
+  const ALERT_API='http://127.0.0.1:8787/api/v1/alerts/evaluate';
+  let state={...K.PRESETS.normal};
+  const history={};K.SENSORS.forEach(s=>history[s.id]=Array(60).fill(state[s.id]));
+  let alerts=[];let autoTimer=null;
+  let telegramEnabled=true;
+  document.getElementById('telegramAlerts').onclick=function(){telegramEnabled=!telegramEnabled;this.classList.toggle('on',telegramEnabled)};
+  async function sendTelegramAlert(telemetry){
+    if(!telegramEnabled)return;
+    try{
+      const res=await fetch(ALERT_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...telemetry,send_telegram:true,use_gemini:false})});
+      if(!res.ok){console.warn('Telegram API',await res.text());return}
+      const data=await res.json();
+      console.info('Telegram sent',data.alert&&data.alert.alert_id,data.telegram&&data.telegram.ok);
+    }catch(e){console.warn('Alert API offline — start: cd backend && uvicorn main:app --port 8787',e)}
+  }
+  const nodes={kiln:'n-kiln',shaft:'n-shaft',bearing:'n-bearing',motor:'n-motor'};
+  function setNodeState(ids,color){Object.values(nodes).forEach(id=>{const r=document.querySelector('#'+id+' rect');r.setAttribute('stroke',color);r.classList.remove('node-pulse')});ids.forEach(id=>{const r=document.querySelector('#'+nodes[id]+' rect');r.setAttribute('stroke',color);if(color!=='#1EE8A4')r.classList.add('node-pulse')})}
+  const gaugeEls={};
+  function initGauges(){
+    const el=document.getElementById('gauges');
+    K.SENSORS.forEach(s=>{
+      const g=document.createElement('div');g.className='gauge';g.dataset.id=s.id;
+      g.innerHTML='<div class="gauge-lbl">'+s.label+'</div><div class="gauge-val"><span class="gv"></span> <span class="gu" style="font-size:12px;color:var(--t2)">'+s.unit+'</span></div><div class="gauge-band"><div class="gauge-band-fill"></div><div class="gauge-marker"></div></div>';
+      el.appendChild(g);
+      gaugeEls[s.id]={root:g,val:g.querySelector('.gv'),fill:g.querySelector('.gauge-band-fill'),marker:g.querySelector('.gauge-marker'),spec:s};
+    });
+  }
+  function updateGauges(){
+    K.SENSORS.forEach(s=>{
+      const v=state[s.id],ge=gaugeEls[s.id];
+      const anom=v<s.norm[0]||v>s.norm[1];
+      ge.root.classList.toggle('anomaly',anom);
+      ge.val.textContent=v.toFixed(s.unit==='K'?1:0);
+      ge.fill.style.width=(v-s.min)/(s.max-s.min)*100+'%';
+      ge.marker.style.left=((s.norm[0]-s.min)/(s.max-s.min)*100)+'%';
+    });
+  }
+  function renderAlerts(){
+    const list=document.getElementById('alertsList');
+    document.getElementById('alertCount').textContent=alerts.length+' Alert'+(alerts.length!==1?'s':'');
+    if(!alerts.length){list.innerHTML='<div style="padding:16px;font-size:12px;color:var(--t3)">No active alerts</div>';return}
+    list.innerHTML=alerts.sort((a,b)=>b.prio-a.prio).map((a,i)=>'<div class="alert-item p'+a.prio+'" data-i="'+i+'"><div class="alert-code">'+a.fault.code+'</div><div class="alert-title">'+a.fault.name+'</div><div class="alert-meta">'+a.elapsed+' · '+a.component+'</div><button class="btn-view" type="button">View Plan</button></div>').join('');
+    list.querySelectorAll('.alert-item').forEach(el=>el.addEventListener('click',()=>openDrawer(alerts[+el.dataset.i])));
+  }
+  function openDrawer(a){
+    document.getElementById('drawer').classList.add('open');
+    document.getElementById('drawerTitle').textContent=a.fault.name+' — Recovery Plan';
+    const h=document.getElementById('drawerHazop');h.textContent='HAZOP '+a.hazop;h.className='hazop-badge '+(a.hazop==='PASS'?'pass':'');
+    h.style.background=a.hazop==='PASS'?'var(--adim)':'rgba(239,68,68,0.15)';h.style.color=a.hazop==='PASS'?'var(--accent)':'var(--danger)';
+    document.getElementById('drawerSource').textContent='Source: '+a.artifact.source_doc;
+    document.getElementById('drawerSop').innerHTML=a.sop.map(s=>'<p style="font-size:12px;margin:8px 0"><b>'+s.n+'.</b> '+s.text+'</p>').join('');
+    document.getElementById('drawerJson').textContent=JSON.stringify(a.artifact,null,2);
+  }
+  document.getElementById('drawerClose').onclick=()=>document.getElementById('drawer').classList.remove('open');
+  const sparkCtx={};
+  function initSparks(){
+    const row=document.getElementById('sparkRow');
+    K.SENSORS.forEach(s=>{
+      const wrap=document.createElement('div');
+      const cv=document.createElement('canvas');
+      cv.dataset.id=s.id;cv.width=120;cv.height=36;
+      const lbl=document.createElement('div');lbl.className='spark-lbl';lbl.textContent=s.id;
+      wrap.appendChild(cv);wrap.appendChild(lbl);
+      row.appendChild(wrap);
+      sparkCtx[s.id]=cv.getContext('2d');
+    });
+  }
+  function drawSpark(id){
+    const d=history[id],ctx=sparkCtx[id],w=120,h=36;
+    if(!ctx||!d.length)return;
+    let mn=d[0],mx=d[0];
+    for(let i=1;i<d.length;i++){if(d[i]<mn)mn=d[i];if(d[i]>mx)mx=d[i]}
+    const rng=mx-mn||1;
+    ctx.fillStyle='#07080A';ctx.fillRect(0,0,w,h);
+    ctx.strokeStyle='#1EE8A4';ctx.lineWidth=1.5;ctx.beginPath();
+    for(let i=0;i<d.length;i++){
+      const x=i/(d.length-1)*w,y=h-((d[i]-mn)/rng)*h*0.75-h*0.08;
+      i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+    }
+    ctx.stroke();
+  }
+  function tickSensors(){
+    K.SENSORS.forEach(s=>{
+      const drift=(Math.random()-0.5)*(s.id==='Wear'?0.4:1.2);
+      state[s.id]=Math.max(s.min,Math.min(s.max,state[s.id]+drift));
+      history[s.id].push(state[s.id]);history[s.id].shift();
+    });
+    updateGauges();
+    K.SENSORS.forEach(s=>drawSpark(s.id));
+  }
+  function injectFault(preset){
+    state={...K.PRESETS[preset]||K.PRESETS.pwf};
+    const r=K.run(state);
+    if(r.anomaly){
+      setNodeState(['bearing','shaft'],'#F59E0B');
+      document.getElementById('p84').setAttribute('opacity','1');
+      document.getElementById('p91').setAttribute('opacity','1');
+      document.getElementById('cascadeBox').innerHTML='<b>Cascade risk elevated.</b> If Bearing B2 fails: 84% probability Drive Shaft seizes within 2 hours. Kiln Motor shutdown P=0.91. Estimated downtime exposure: <b>$180,000</b>.';
+      alerts.unshift({fault:r.fault,artifact:r.artifact,hazop:r.hazop,sop:r.sop,prio:r.fault.prio,elapsed:'0s ago',component:'Bearing B2'});
+      renderAlerts();updateGauges();
+      sendTelegramAlert(state);
+    }
+  }
+  document.getElementById('autoRun').onclick=function(){this.classList.toggle('on');if(this.classList.contains('on')){autoTimer=setInterval(()=>injectFault(['pwf','hdf'][Math.floor(Math.random()*2)]),55000)}else clearInterval(autoTimer)};
+  let tickScheduled=false;
+  setInterval(()=>{
+    if(tickScheduled)return;
+    tickScheduled=true;
+    requestAnimationFrame(()=>{tickSensors();tickScheduled=false});
+  },4000);
+  setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-GB',{hour12:false})},1000);
+  initGauges();initSparks();updateGauges();K.SENSORS.forEach(s=>drawSpark(s.id));
+  setNodeState(['kiln','shaft','bearing','motor'],'#1EE8A4');
+  setTimeout(()=>injectFault('pwf'),5000);
+})();
+</script>
+</body>
+</html>

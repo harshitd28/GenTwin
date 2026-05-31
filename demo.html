@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenTwin Demo — Interactive Pipeline</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg0:#07080A;--bg1:#0C0E13;--bg2:#111520;--bg3:#161B28;--bg4:#1C2233;
+--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--border3:rgba(255,255,255,0.16);
+--accent:#1EE8A4;--adim:rgba(30,232,164,0.10);--adim2:rgba(30,232,164,0.06);
+--warn:#F59E0B;--danger:#EF4444;--t1:#F1F5F9;--t2:#8B95A8;--t3:#4A5268;--ta:#1EE8A4;
+--f:'Montserrat',system-ui,sans-serif;--ease:cubic-bezier(0.16,1,0.3,1);
+--mono:'Courier New',monospace;
+}
+html,body{height:100%;font-family:var(--f);background:var(--bg0);color:var(--t1);overflow:hidden}
+a{color:var(--ta);text-decoration:none}
+a:hover{text-decoration:underline}
+.app-nav{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--border);background:var(--bg1);flex-shrink:0}
+.app-nav-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;color:var(--t1)}
+.app-nav-links{display:flex;gap:6px;flex-wrap:wrap}
+.app-nav-links a{font-size:11px;font-weight:600;color:var(--t2);padding:5px 10px;border-radius:5px;border:1px solid transparent}
+.app-nav-links a:hover,.app-nav-links a.active{color:var(--t1);border-color:var(--border2);background:var(--bg2);text-decoration:none}
+.app-nav-links a.active{color:var(--ta);border-color:rgba(30,232,164,0.25)}
+.layout{display:grid;grid-template-columns:280px 1fr 340px;height:calc(100vh - 52px)}
+.panel{border-right:1px solid var(--border);overflow-y:auto;background:var(--bg1)}
+.panel:last-child{border-right:none;border-left:1px solid var(--border)}
+.panel-hd{padding:16px 18px 12px;font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--ta);border-bottom:1px solid var(--border)}
+.panel-bd{padding:16px 18px}
+.sensor-row{margin-bottom:14px}
+.sensor-lbl{display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:var(--t2);margin-bottom:6px}
+.sensor-lbl span:last-child{color:var(--t1);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent);height:4px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.preset-btn{font-size:10px;font-weight:600;padding:6px 10px;border-radius:5px;border:1px solid var(--border2);background:var(--bg2);color:var(--t2);cursor:pointer;font-family:var(--f);transition:all 0.15s}
+.preset-btn:hover{border-color:var(--accent);color:var(--ta)}
+.center{display:flex;flex-direction:column;background:var(--bg0);overflow:hidden}
+.pipeline{flex:1;display:flex;align-items:center;justify-content:center;padding:24px;gap:8px;flex-wrap:wrap}
+.layer-node{flex:1;min-width:100px;max-width:140px;text-align:center;padding:20px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);opacity:0.35;transition:opacity 0.4s var(--ease),border-color 0.4s,border-color 0.4s,box-shadow 0.4s,transform 0.4s}
+.layer-node.active{opacity:1;border-color:rgba(30,232,164,0.35);box-shadow:0 0 24px var(--adim);transform:scale(1.02)}
+.layer-node.done{opacity:0.85;border-color:rgba(30,232,164,0.2)}
+.layer-node.bypass{opacity:0.5}
+.layer-num{font-size:10px;font-weight:700;color:var(--ta);letter-spacing:0.1em;margin-bottom:6px}
+.layer-name{font-size:12px;font-weight:700;color:var(--t1);margin-bottom:4px}
+.layer-status{font-size:10px;color:var(--t2);min-height:14px}
+.layer-arrow{color:var(--t3);font-size:18px;flex-shrink:0}
+.pipeline-meta{padding:12px 24px 20px;text-align:center;font-size:12px;color:var(--t2)}
+.pipeline-meta b{color:var(--ta)}
+.tabs{display:flex;border-bottom:1px solid var(--border)}
+.tab{flex:1;padding:12px;font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;background:none;border:none;color:var(--t2);cursor:pointer;font-family:var(--f);border-bottom:2px solid transparent}
+.tab.active{color:var(--ta);border-bottom-color:var(--accent)}
+.tab-panel{display:none;padding:16px 18px;font-size:12px;line-height:1.65;color:var(--t2);overflow-y:auto;max-height:calc(100vh - 52px - 44px)}
+.tab-panel.active{display:block}
+.tab-panel pre{background:var(--bg0);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:var(--mono);font-size:11px;color:var(--t1);overflow-x:auto;white-space:pre-wrap;margin-top:10px}
+.sop-step{padding:8px 0;border-bottom:1px solid var(--border);display:flex;gap:10px}
+.sop-n{font-weight:800;color:var(--ta);min-width:20px}
+.hazop-pass{color:var(--accent);font-weight:700;font-size:14px}
+.hazop-block{color:var(--danger);font-weight:700;font-size:14px}
+.lat-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums}
+.lat-row.total{color:var(--ta);font-weight:700;border-bottom:none;margin-top:8px}
+@media(max-width:1100px){.layout{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;height:auto;overflow:auto}html,body{overflow:auto;height:auto}.center{min-height:400px}}
+</style>
+</head>
+<body>
+<header class="app-nav" role="navigation" aria-label="Product navigation">
+  <a class="app-nav-brand" href="index.html">
+    <svg width="22" height="22" viewBox="0 0 28 28" fill="none"><path d="M14 3L24 8.5V19.5L14 25L4 19.5V8.5L14 3Z" stroke="#1EE8A4" stroke-width="1.5"/><path d="M14 8L20 11.5V18.5L14 22L8 18.5V11.5L14 8Z" stroke="#1EE8A4" stroke-width="1" fill="rgba(30,232,164,0.08)"/></svg>
+    GenTwin Demo
+  </a>
+  <nav class="app-nav-links">
+    <a href="index.html">Landing</a>
+    <a href="demo.html" class="active">Demo</a>
+    <a href="operator.html">Operator</a>
+    <a href="analytics.html">Analytics</a>
+    <a href="docs.html">Docs</a>
+    <a href="simulator.html">Simulator</a>
+    <a href="deploy.html">Deploy</a>
+    <a href="paper.html">Paper</a>
+  </nav>
+</header>
+<div class="layout">
+  <aside class="panel">
+    <div class="panel-hd">Sensor Injection</div>
+    <div class="panel-bd" id="sliders"></div>
+    <div class="panel-bd" style="padding-top:0">
+      <div class="presets" id="presets"></div>
+    </div>
+  </aside>
+  <main class="center">
+    <div class="pipeline" id="pipeline"></div>
+    <div class="pipeline-meta" id="pipelineMeta">Adjust sensors or select a preset to run the pipeline.</div>
+  </main>
+  <aside class="panel">
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="json" role="tab">JSON</button>
+      <button class="tab" data-tab="sop" role="tab">SOP</button>
+      <button class="tab" data-tab="hazop" role="tab">HAZOP</button>
+      <button class="tab" data-tab="lat" role="tab">Latency</button>
+    </div>
+    <div class="tab-panel active" id="tab-json" role="tabpanel"><pre id="outJson">{}</pre></div>
+    <div class="tab-panel" id="tab-sop" role="tabpanel"><div id="outSop"></div></div>
+    <div class="tab-panel" id="tab-hazop" role="tabpanel"><div id="outHazop"></div></div>
+    <div class="tab-panel" id="tab-lat" role="tabpanel"><div id="outLat"></div></div>
+  </aside>
+</div>
+<script>
+window.GenTwinKernel=(function(){
+  const SENSORS=[
+    {id:'PS1',label:'PS1 Hydraulic',unit:'bar',min:140,max:165,norm:[155,160],def:157.5},
+    {id:'PS2',label:'PS2 Pneumatic',unit:'bar',min:90,max:115,norm:[100,105],def:102},
+    {id:'TS1',label:'TS1 Air Temp',unit:'K',min:295,max:310,norm:[298,302],def:300},
+    {id:'TS2',label:'TS2 Process Temp',unit:'K',min:300,max:320,norm:[305,310],def:307},
+    {id:'Torque',label:'Torque',unit:'Nm',min:20,max:85,norm:[35,55],def:42},
+    {id:'Speed',label:'Rotational Speed',unit:'rpm',min:1200,max:1800,norm:[1400,1600],def:1500},
+    {id:'Wear',label:'Tool Wear',unit:'min',min:0,max:250,norm:[0,180],def:120}
+  ];
+  const LAT={L1:3.1,L1s:0.4,L2a:9.8,L2as:1.1,L2b:15.2,L2bs:1.8,L3r:312,L3rs:28,L3o:189,L3os:22,L3g:741,L3gs:94,L4:38,L4s:5,total:1119,totals:121};
+  const PRESETS={
+    normal:{PS1:157.5,PS2:102,TS1:300,TS2:307,Torque:42,Speed:1500,Wear:120},
+    hdf:{PS1:158,PS2:103,TS1:298,TS2:309,Torque:45,Speed:1480,Wear:130},
+    pwf:{PS1:128,PS2:98,TS1:301,TS2:308,Torque:38,Speed:1200,Wear:140},
+    osf:{PS1:156,PS2:101,TS1:300,TS2:307,Torque:78,Speed:1350,Wear:150},
+    twf:{PS1:157,PS2:102,TS1:300,TS2:307,Torque:40,Speed:1500,Wear:215},
+    violation:{PS1:175,PS2:102,TS1:300,TS2:307,Torque:42,Speed:1500,Wear:120}
+  };
+  function inNorm(v,s){return v>=s.norm[0]&&v<=s.norm[1]}
+  function zScore(v,s){const m=(s.norm[0]+s.norm[1])/2,r=(s.norm[1]-s.norm[0])/2||1;return((v-m)/r).toFixed(2)}
+  function stage1(s){return SENSORS.some(x=>!inNorm(s[x.id],x))}
+  function stage2(s){
+    const dT=s.TS2-s.TS1;
+    if(s.Wear>=200)return{code:'TWF',name:'Tool Wear Failure',prio:2};
+    if(dT>8.6)return{code:'HDF',name:'Heat Dissipation Failure',prio:2};
+    if(s.Torque>72&&s.Speed<1400)return{code:'OSF',name:'Overstrain Failure',prio:2};
+    const P=s.Torque*s.Speed/9550;
+    if(P<35&&s.Speed<1450)return{code:'PWF',name:'Power Failure',prio:2};
+    if(!inNorm(s.PS1,SENSORS[0])||!inNorm(s.PS2,SENSORS[1]))return{code:'PWF',name:'Power Failure',prio:2};
+    return{code:'RNF',name:'Random Failure',prio:1};
+  }
+  function artifact(s,fault,unsafe){
+    const base={faultCode:fault.code,hazop_status:unsafe?'BLOCK':'PASS',target_pressure_ps1:unsafe?175:Math.min(130,s.PS1),clearing_duration_s:30,confidence:unsafe?0.42:0.97,source_doc:'FLSmidth_Ch4.pdf §3.2',safetyPriority:fault.prio};
+    if(fault.code==='PWF')base.action='valve_switching_lag_clear';
+    else if(fault.code==='HDF')base.action='thermal_runaway_mitigation';
+    else if(fault.code==='OSF')base.action='torque_limit_reduction';
+    else if(fault.code==='TWF')base.action='tool_change_procedure';
+    else base.action='standard_inspection';
+    return base;
+  }
+  function sop(fault,art){
+    const steps={
+      PWF:['Isolate pneumatic supply valve V-12','Verify PS1 stabilises above 140 bar','Execute valve_switching_lag_clear sequence per FLSmidth Ch.4','Monitor torque/speed ratio for 60s','Return to nominal operating band'],
+      HDF:['Reduce kiln feed rate 15%','Activate auxiliary cooling circuit','Verify ΔT drops below 8.6K within 120s','Inspect heat exchanger HX-3','Log thermal event to maintenance CMMS'],
+      OSF:['Immediate torque limit reduction to 55 Nm','Reduce rotational speed to 1300 rpm','Inspect drive shaft coupling DS-2','Schedule bearing B2 vibration analysis','Do not resume until OSF signature clears'],
+      TWF:['Stop production cycle safely','Replace worn tool per OEM interval table','Reset wear counter in PLC register W-04','Run 5-min calibration cycle','Validate Stage 2 classification returns normal'],
+      RNF:['Capture full sensor snapshot','Run diagnostic checklist DR-07','Escalate to maintenance engineering','Do not override safety interlocks']
+    };
+    return (steps[fault.code]||steps.RNF).map((t,i)=>({n:i+1,text:t,source:art.source_doc}));
+  }
+  function run(values){
+    const s={...values};
+    const anom=stage1(s);
+    if(!anom){
+      return{anomaly:false,stage1:false,fault:null,artifact:null,hazop:'PASS',lat:LAT,bypass:true,sop:[],chunks:[]};
+    }
+    const fault=stage2(s);
+    const unsafe=s.PS1>130||values.PS1>130;
+    const art=artifact(s,fault,unsafe);
+    const hazop=art.target_pressure_ps1<=130?'PASS':'BLOCK';
+    return{anomaly:true,stage1:true,fault,artifact:art,hazop,lat:LAT,bypass:false,sop:sop(fault,art),chunks:[{id:'chk-'+fault.code+'-01',sim:0.89,doc:art.source_doc,text:'Retrieved fault-filtered OEM chunk (~80% search reduction)'}],zScores:Object.fromEntries(SENSORS.map(x=>[x.id,zScore(s[x.id],x)]))};
+  }
+  return{SENSORS,LAT,PRESETS,inNorm,zScore,run};
+})();
+(function(){
+  const K=window.GenTwinKernel;
+  let state={...K.PRESETS.normal};
+  const slidersEl=document.getElementById('sliders');
+  const presetsEl=document.getElementById('presets');
+  const layers=['L1 Sense','L2 Detect','L3 Generate','L4 Validate','L5 Act'];
+  const pipelineEl=document.getElementById('pipeline');
+  layers.forEach((name,i)=>{
+    if(i>0){const ar=document.createElement('span');ar.className='layer-arrow';ar.textContent='→';pipelineEl.appendChild(ar)}
+    const d=document.createElement('div');d.className='layer-node';d.dataset.layer=i;
+    d.innerHTML='<div class="layer-num">L'+(i+1)+'</div><div class="layer-name">'+name.split(' ')[1]+'</div><div class="layer-status"></div>';
+    pipelineEl.appendChild(d);
+  });
+  K.SENSORS.forEach(s=>{
+    const row=document.createElement('div');row.className='sensor-row';
+    row.innerHTML='<div class="sensor-lbl"><span>'+s.label+'</span><span id="val-'+s.id+'">'+state[s.id]+' '+s.unit+'</span></div>';
+    const inp=document.createElement('input');inp.type='range';inp.min=s.min;inp.max=s.max;inp.step=s.unit==='K'?0.1:1;inp.value=state[s.id];inp.dataset.id=s.id;
+    inp.addEventListener('input',()=>{state[s.id]=parseFloat(inp.value);document.getElementById('val-'+s.id).textContent=state[s.id]+' '+s.unit;schedulePipeline()});
+    row.appendChild(inp);slidersEl.appendChild(row);
+  });
+  Object.entries({normal:'Normal',hdf:'HDF Fault',pwf:'PWF Fault',osf:'OSF Fault',twf:'TWF Fault',violation:'HAZOP Violation'}).forEach(([k,l])=>{
+    const b=document.createElement('button');b.className='preset-btn';b.textContent=l;
+    b.addEventListener('click',()=>{state={...K.PRESETS[k]};K.SENSORS.forEach(s=>{const inp=slidersEl.querySelector('[data-id="'+s.id+'"]');inp.value=state[s.id];document.getElementById('val-'+s.id).textContent=state[s.id]+' '+s.unit});runPipeline()});
+    presetsEl.appendChild(b);
+  });
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab,.tab-panel').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');document.getElementById('tab-'+t.dataset.tab).classList.add('active');
+  }));
+  let pipelineTimer=null;
+  function schedulePipeline(){clearTimeout(pipelineTimer);pipelineTimer=setTimeout(runPipeline,120)}
+  function runPipeline(){
+    const nodes=pipelineEl.querySelectorAll('.layer-node');
+    nodes.forEach(n=>{n.classList.remove('active','done','bypass');n.querySelector('.layer-status').textContent=''});
+    const result=K.run(state);
+    const seq=result.bypass?[{i:0,s:'Ingest 3.1ms'},{i:1,s:'Normal — pipeline stop'}]:[
+      {i:0,s:'Ingest '+K.LAT.L1+'ms'},{i:1,s:'RF '+K.LAT.L2a+'ms → '+ (result.fault?result.fault.code:'—')},{i:2,s:'RAG '+K.LAT.L3r+'ms'},{i:3,s:result.hazop},{i:4,s:'Route to SCADA'}];
+    let t=0;
+    seq.forEach((step,idx)=>{
+      setTimeout(()=>{
+        nodes.forEach((n,j)=>{n.classList.toggle('done',j<step.i);n.classList.toggle('active',j===step.i);n.classList.toggle('bypass',result.bypass&&j>1)});
+        const n=nodes[step.i];if(n)n.querySelector('.layer-status').textContent=step.s;
+        if(idx===seq.length-1)renderOutput(result);
+      },t);
+      t+=result.bypass?400:280;
+    });
+    document.getElementById('pipelineMeta').innerHTML=result.bypass?'<b>82.9% bypass</b> — Normal state. No LLM invocation.':'End-to-end <b>'+K.LAT.total+' ± '+K.LAT.totals+' ms</b> · Fault: <b>'+(result.fault?result.fault.code:'—')+'</b>';
+  }
+  function renderOutput(r){
+    document.getElementById('outJson').textContent=r.artifact?JSON.stringify(r.artifact,null,2):'{"status":"normal","llm_bypass":true}';
+    const sopEl=document.getElementById('outSop');
+    if(!r.sop.length)sopEl.innerHTML='<p>Normal operation — no SOP required.</p>';
+    else sopEl.innerHTML=r.sop.map(s=>'<div class="sop-step"><span class="sop-n">'+s.n+'</span><span>'+s.text+' <em style="color:var(--t3)">('+s.source+')</em></span></div>').join('');
+    document.getElementById('outHazop').innerHTML=r.hazop==='PASS'
+      ?'<p class="hazop-pass">HAZOP PASS</p><p>Target pressure within 130 bar burst threshold. Zero violations (N=100 trials).</p>'
+      :'<p class="hazop-block">HAZOP BLOCK</p><p>Unconstrained value '+r.artifact.target_pressure_ps1+' bar exceeds 130 bar limit (34% above burst threshold). Artifact rejected — loops to L2.</p>';
+    const lat=document.getElementById('outLat');
+    if(r.bypass)lat.innerHTML='<div class="lat-row"><span>L1 Ingestion</span><span>'+K.LAT.L1+' ± '+K.LAT.L1s+' ms</span></div><div class="lat-row total"><span>Total</span><span>&lt; 12 ms</span></div>';
+    else lat.innerHTML=[
+      ['L1 Ingestion',K.LAT.L1,K.LAT.L1s],['L2 Stage 1 RF',K.LAT.L2a,K.LAT.L2as],['L2 Stage 2 XGBoost',K.LAT.L2b,K.LAT.L2bs],
+      ['L3 ChromaDB',K.LAT.L3r,K.LAT.L3rs],['L3 Agent Orch.',K.LAT.L3o,K.LAT.L3os],['L3 Gemini',K.LAT.L3g,K.LAT.L3gs],['L4 HAZOP',K.LAT.L4,K.LAT.L4s]
+    ].map(x=>'<div class="lat-row"><span>'+x[0]+'</span><span>'+x[1]+' ± '+x[2]+' ms</span></div>').join('')+'<div class="lat-row total"><span>Total</span><span>'+K.LAT.total+' ± '+K.LAT.totals+' ms</span></div>';
+  }
+  runPipeline();
+})();
+</script>
+</body>
+</html>

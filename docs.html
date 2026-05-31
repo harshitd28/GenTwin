@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenTwin Docs — Technical Documentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg0:#07080A;--bg1:#0C0E13;--bg2:#111520;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--accent:#1EE8A4;--adim:rgba(30,232,164,0.10);--t1:#F1F5F9;--t2:#8B95A8;--ta:#1EE8A4;--f:'Montserrat',system-ui,sans-serif;--mono:'Courier New',monospace}
+body{font-family:var(--f);background:var(--bg0);color:var(--t1);display:flex;min-height:100vh}
+a{color:var(--ta);text-decoration:none}
+.sidebar{width:240px;flex-shrink:0;background:var(--bg1);border-right:1px solid var(--border);padding:20px 0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sidebar h1{font-size:14px;font-weight:800;padding:0 20px 16px}
+.sidebar input{width:calc(100% - 40px);margin:0 20px 16px;padding:8px 10px;font-size:12px;background:var(--bg0);border:1px solid var(--border2);border-radius:6px;color:var(--t1);font-family:var(--f)}
+.sidebar nav a{display:block;padding:8px 20px;font-size:12px;font-weight:500;color:var(--t2)}
+.sidebar nav a:hover,.sidebar nav a.active{color:var(--t1);background:var(--adim)}
+.main{flex:1;padding:40px 48px 80px;max-width:820px}
+.main h2{font-size:28px;font-weight:800;margin:40px 0 16px;letter-spacing:-0.03em}
+.main h2:first-child{margin-top:0}
+.main h3{font-size:16px;font-weight:700;margin:24px 0 10px;color:var(--t1)}
+.main p,.main li{font-size:14px;line-height:1.75;color:var(--t2);margin-bottom:12px}
+.main ul{padding-left:20px;margin-bottom:16px}
+.sec-eye{font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--ta);margin-bottom:8px}
+.sec-eye::before{content:'';display:inline-block;width:16px;height:1px;background:var(--accent);margin-right:8px;vertical-align:middle}
+pre{position:relative;background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-family:var(--mono);font-size:12px;color:var(--t1);overflow-x:auto;margin:12px 0 20px}
+.copy-btn{position:absolute;top:8px;right:8px;font-size:10px;font-weight:700;padding:4px 10px;background:var(--bg2);border:1px solid var(--border2);color:var(--t2);border-radius:4px;cursor:pointer;font-family:var(--f)}
+.arch-svg{width:100%;max-width:600px;margin:20px 0}
+.version{display:inline-block;font-size:10px;font-weight:700;padding:4px 10px;background:var(--adim);color:var(--ta);border-radius:4px;margin-bottom:24px}
+.hidden{display:none!important}
+@media(max-width:800px){body{flex-direction:column}.sidebar{width:100%;height:auto;position:relative}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <h1>GenTwin Docs</h1>
+  <span class="version">v1.0.0 · IRAI 2026</span>
+  <input type="search" id="search" placeholder="Search docs…" aria-label="Search documentation">
+  <nav id="nav">
+    <a href="#overview" class="active">Overview</a>
+    <a href="#architecture">Architecture</a>
+    <a href="#layer1">Layer 1 — Sense</a>
+    <a href="#layer2">Layer 2 — Detect</a>
+    <a href="#layer3">Layer 3 — Generate</a>
+    <a href="#layer4">Layer 4 — Validate</a>
+    <a href="#layer5">Layer 5 — Act</a>
+    <a href="#api">API Reference</a>
+    <a href="#schema">Dataset Schema</a>
+    <a href="#config">Configuration</a>
+    <a href="#deploy">Deployment</a>
+    <a href="#changelog">Changelog</a>
+  </nav>
+  <p style="padding:16px 20px;font-size:11px"><a href="index.html">← Landing</a> · <a href="operator.html">Operator</a></p>
+</aside>
+<main class="main" id="content">
+  <section id="overview" data-searchable>
+    <div class="sec-eye">Overview</div>
+    <h2>GenTwin Platform</h2>
+    <p>GenTwin is a five-layer Generative Industrial Immunosystem that closes the loop from live sensor anomaly to physics-validated recovery plan in under 1.25 seconds. TwinGuard Dynamics deploys GenTwin at the edge for cement, steel, paper, and hydraulic facilities running OPC-UA SCADA.</p>
+    <p>Unlike ML classifiers that output labels only, or digital twins that lack autonomous remediation, GenTwin delivers operator-ready SOPs and PLC scripts with zero HAZOP violations across 100 independent trials.</p>
+  </section>
+  <section id="architecture" data-searchable>
+    <div class="sec-eye">Architecture</div>
+    <h2>Five-Layer Pipeline</h2>
+    <svg class="arch-svg" viewBox="0 0 560 120" fill="none">
+      <rect x="10" y="40" width="90" height="50" rx="8" fill="#111520" stroke="#1EE8A4"/><text x="55" y="70" fill="#F1F5F9" font-size="11" font-family="Montserrat" text-anchor="middle" font-weight="700">L1 Sense</text>
+      <path d="M100 65 H130" stroke="rgba(255,255,255,0.2)"/><rect x="130" y="40" width="90" height="50" rx="8" fill="#111520" stroke="#1EE8A4"/><text x="175" y="70" fill="#F1F5F9" font-size="11" font-family="Montserrat" text-anchor="middle" font-weight="700">L2 Detect</text>
+      <path d="M220 65 H250" stroke="rgba(255,255,255,0.2)"/><rect x="250" y="40" width="90" height="50" rx="8" fill="#111520" stroke="#1EE8A4"/><text x="295" y="70" fill="#F1F5F9" font-size="11" font-family="Montserrat" text-anchor="middle" font-weight="700">L3 Generate</text>
+      <path d="M340 65 H370" stroke="rgba(255,255,255,0.2)"/><rect x="370" y="40" width="90" height="50" rx="8" fill="#111520" stroke="#1EE8A4"/><text x="415" y="70" fill="#F1F5F9" font-size="11" font-family="Montserrat" text-anchor="middle" font-weight="700">L4 Validate</text>
+      <path d="M460 65 H490" stroke="rgba(255,255,255,0.2)"/><rect x="490" y="40" width="60" height="50" rx="8" fill="#111520" stroke="#1EE8A4"/><text x="520" y="70" fill="#F1F5F9" font-size="11" font-family="Montserrat" text-anchor="middle" font-weight="700">L5 Act</text>
+    </svg>
+    <p>Layer 2 gates 82.9% of cycles before any LLM call. Layer 4 operates independently of ML — catching 50/50 adversarial unsafe artifacts.</p>
+  </section>
+  <section id="layer1" data-searchable><div class="sec-eye">Layer 1</div><h2>Sense — IIoT Ingestion</h2><p>OPC-UA via Telegraf at 5s cadence, cycle-averaged to 60s windows. Sensors: PS1, PS2 (bar), TS1, TS2 (K), Torque (Nm), Speed (rpm), Tool Wear (min). Latency: 3.1 ± 0.4 ms. Storage: InfluxDB.</p></section>
+  <section id="layer2" data-searchable><div class="sec-eye">Layer 2</div><h2>Detect — Two-Stage ML</h2><p>Stage 1 Random Forest (&lt;12ms, 95% recall). Stage 2 XGBoost classifies TWF, HDF, PWF, OSF, RNF. Combined latency 28ms. faultCode bridges to ChromaDB.</p></section>
+  <section id="layer3" data-searchable><div class="sec-eye">Layer 3</div><h2>Generate — RAG + Agent Swarm</h2><p>ChromaDB with all-MiniLM-L6-v2, θ=0.75. Five agents: Engineer, Simulation, Safety, Cost/Risk, Planner (Gemini 2.5 Flash). Retrieval 312±28ms; synthesis 741±94ms.</p></section>
+  <section id="layer4" data-searchable><div class="sec-eye">Layer 4</div><h2>Validate — HAZOP + KG</h2><p>networkx topology graph. Hard limit: PS1 ≤ 130 bar. Latency 38±5ms. FAIL loops to L2; operator never sees unsafe plans.</p></section>
+  <section id="layer5" data-searchable><div class="sec-eye">Layer 5</div><h2>Act — Operator Interface</h2><p>Outputs: SOP, PLC JSON, STL (future), emergency shutdown (safetyPriority=3, no LLM). See <a href="operator.html">operator.html</a>.</p></section>
+  <section id="api" data-searchable><div class="sec-eye">API</div><h2>API Reference</h2>
+    <pre><button class="copy-btn" type="button">Copy</button>POST /v1/pipeline/run
+Content-Type: application/json
+{ "plant_id": "jk-line-2", "telemetry": { "PS1": 157.5, "PS2": 102, ... } }</pre>
+    <pre><button class="copy-btn" type="button">Copy</button>GET /v1/artifacts/{id}
+→ { "faultCode", "hazop_status", "target_pressure_ps1", "action", "source_doc" }</pre>
+  </section>
+  <section id="schema" data-searchable><div class="sec-eye">Schema</div><h2>Dataset &amp; faultCode</h2><p>Validated on AI4I 2020 (2,205 instances, 5-fold CV). faultCode enum: TWF | HDF | PWF | OSF | RNF.</p>
+    <pre><button class="copy-btn" type="button">Copy</button>{ "faultCode": "PWF", "safetyPriority": 2, "chunkID": "...", "sourceDoc": "FLSmidth_Ch4.pdf §3.2" }</pre>
+  </section>
+  <section id="config" data-searchable><div class="sec-eye">Config</div><h2>Configuration</h2><p>Chroma cosine threshold θ=0.75. safetyPriority: 1=Advisory, 2=Warning, 3=Critical (deterministic, no LLM).</p></section>
+  <section id="deploy" data-searchable><div class="sec-eye">Deploy</div><h2>Deployment Guide</h2><p>Edge: Jetson AGX Orin or Coral TPU. Air-gap: Llama-3-8B-Instruct 4-bit GGUF on 8GB VRAM.</p>
+    <pre><button class="copy-btn" type="button">Copy</button>[[inputs.opcua]]
+endpoint = "opc.tcp://plc.plant.local:4840"
+[[outputs.influxdb]]
+urls = ["http://influx:8086"]</pre>
+  </section>
+  <section id="changelog" data-searchable><div class="sec-eye">Changelog</div><h2>v1.0.0</h2><p>IRAI 2026 release. Initial operator SCADA, analytics, docs, simulator, deploy wizard.</p></section>
+</main>
+<script>
+document.getElementById('search').addEventListener('input',function(){
+  const q=this.value.toLowerCase();
+  document.querySelectorAll('[data-searchable]').forEach(s=>{
+    const show=!q||s.textContent.toLowerCase().includes(q);
+    s.classList.toggle('hidden',!show);
+  });
+});
+document.querySelectorAll('.copy-btn').forEach(btn=>btn.addEventListener('click',()=>{
+  const pre=btn.parentElement;navigator.clipboard.writeText(pre.textContent.replace('Copy','').trim());btn.textContent='Copied';
+  setTimeout(()=>btn.textContent='Copy',1500);
+}));
+document.querySelectorAll('#nav a').forEach(a=>a.addEventListener('click',()=>{
+  document.querySelectorAll('#nav a').forEach(x=>x.classList.remove('active'));a.classList.add('active');
+}));
+</script>
+</body>
+</html>

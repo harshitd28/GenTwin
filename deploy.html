@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenTwin Deploy — Configuration Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg0:#07080A;--bg1:#0C0E13;--bg2:#111520;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--accent:#1EE8A4;--adim:rgba(30,232,164,0.10);--t1:#F1F5F9;--t2:#8B95A8;--ta:#1EE8A4;--f:'Montserrat',system-ui,sans-serif;--mono:'Courier New',monospace}
+body{font-family:var(--f);background:var(--bg0);color:var(--t1);min-height:100vh;padding:24px}
+.wrap{max-width:960px;margin:0 auto}
+h1{font-size:24px;font-weight:800;margin-bottom:8px}
+.steps{display:flex;gap:8px;margin:24px 0;flex-wrap:wrap}
+.step{font-size:11px;font-weight:700;padding:8px 14px;border-radius:6px;border:1px solid var(--border2);color:var(--t2);cursor:pointer}
+.step.done{border-color:var(--accent);color:var(--ta)}
+.step.active{background:var(--adim);border-color:var(--accent);color:var(--t1)}
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px;display:none}
+.panel.active{display:block}
+.panel label{display:block;font-size:12px;font-weight:600;color:var(--t2);margin:12px 0 6px}
+.panel select,.panel input{width:100%;max-width:400px;padding:10px;background:var(--bg0);border:1px solid var(--border2);border-radius:6px;color:var(--t1);font-family:var(--f)}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.opt{padding:10px 16px;border:1px solid var(--border2);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;color:var(--t2)}
+.opt.selected{border-color:var(--accent);background:var(--adim);color:var(--ta)}
+.btn{font-size:12px;font-weight:700;padding:10px 20px;border-radius:6px;border:none;background:var(--accent);color:var(--bg0);cursor:pointer;font-family:var(--f);margin-right:8px;margin-top:16px}
+.btn-g{background:transparent;border:1px solid var(--border2);color:var(--t2)}
+#results{display:none}
+#results.show{display:block}
+.topo{margin:20px 0}
+pre{background:var(--bg0);padding:14px;border-radius:8px;font-family:var(--mono);font-size:11px;overflow:auto;border:1px solid var(--border)}
+.cost{font-size:28px;font-weight:900;color:var(--ta);margin:12px 0}
+.foot{font-size:11px;color:var(--t3);margin-top:8px}
+a{color:var(--ta);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html">← GenTwin</a>
+  <h1>Deployment Configuration Builder</h1>
+  <p style="color:var(--t2);font-size:14px;margin-bottom:24px">Generate plant-specific YAML, Docker Compose, and hardware checklist.</p>
+  <div class="steps" id="steps"></div>
+  <div class="panel active" data-step="0"><h3 style="margin-bottom:12px">Plant type</h3><div class="opts" data-field="plant"><span class="opt selected" data-v="cement">Cement</span><span class="opt" data-v="hydraulic">Hydraulic</span><span class="opt" data-v="steel">Steel</span><span class="opt" data-v="paper">Paper</span><span class="opt" data-v="custom">Custom</span></div><button class="btn next" type="button">Next</button></div>
+  <div class="panel" data-step="1"><h3>Edge hardware</h3><div class="opts" data-field="edge"><span class="opt selected" data-v="jetson">NVIDIA Jetson AGX Orin</span><span class="opt" data-v="coral">Google Coral TPU</span><span class="opt" data-v="x86">Standard x86 Server</span></div><button class="btn next" type="button">Next</button></div>
+  <div class="panel" data-step="2"><h3>LLM mode</h3><div class="opts" data-field="llm"><span class="opt selected" data-v="gemini">Gemini 2.5 Flash (Cloud)</span><span class="opt" data-v="llama">Llama-3-8B Air-Gapped</span><span class="opt" data-v="custom">Custom endpoint</span></div><button class="btn next" type="button">Next</button></div>
+  <div class="panel" data-step="3"><h3>Safety</h3><label>HAZOP max PS1 (bar)</label><input type="number" id="hazopMax" value="130"><label>safetyPriority 3 → deterministic shutdown</label><select id="prio"><option value="3">Enabled (recommended)</option></select><button class="btn next" type="button">Next</button></div>
+  <div class="panel" data-step="4"><h3>Output formats</h3><div class="opts" data-field="outputs"><span class="opt" data-v="sop">SOP only</span><span class="opt selected" data-v="plc">SOP + PLC</span><span class="opt" data-v="full">Full (SOP + PLC + STL)</span></div><button class="btn" id="generate" type="button">Generate config</button></div>
+  <div id="results">
+    <div class="panel active">
+      <h3>Deployment topology</h3>
+      <svg class="topo" viewBox="0 0 520 100" width="100%"><rect x="10" y="30" width="80" height="50" rx="6" fill="#111520" stroke="#8B95A8"/><text x="50" y="60" fill="#F1F5F9" font-size="9" text-anchor="middle" font-family="Montserrat">PLC</text><text x="130" y="55" fill="#8B95A8" font-size="14">↔</text><rect x="150" y="30" width="100" height="50" rx="6" fill="#111520" stroke="#1EE8A4"/><text x="200" y="55" fill="#F1F5F9" font-size="9" text-anchor="middle" font-family="Montserrat">Edge L1,2,4</text><text x="270" y="40" fill="#F59E0B" font-size="8" font-family="Montserrat">IT/OT</text><text x="310" y="55" fill="#8B95A8" font-size="14">↔</text><rect x="330" y="30" width="90" height="50" rx="6" fill="#111520" stroke="#8B95A8"/><text x="375" y="60" fill="#F1F5F9" font-size="9" text-anchor="middle" font-family="Montserrat">LLM L3</text></svg>
+      <div class="cost" id="costEst">$4,200 / month</div>
+      <p class="foot">Estimate: base platform + sensor nodes + LLM tier. Assumptions documented in config YAML.</p>
+      <pre id="yamlOut"></pre>
+      <button class="btn" id="dlYaml" type="button">Download gentwin-config.yaml</button>
+      <pre id="dockerOut" style="margin-top:16px"></pre>
+      <ul id="checklist" style="font-size:13px;color:var(--t2);line-height:1.8;margin-top:16px;padding-left:20px"></ul>
+    </div>
+  </div>
+</div>
+<script>
+const cfg={plant:'cement',edge:'jetson',llm:'gemini',outputs:'plc',hazop:130};
+let step=0;
+const panels=document.querySelectorAll('.panel[data-step]');
+const stepsEl=document.getElementById('steps');
+['Plant','Hardware','LLM','Safety','Outputs'].forEach((l,i)=>{const s=document.createElement('span');s.className='step'+(i===0?' active':'');s.textContent=(i+1)+'. '+l;s.dataset.i=i;stepsEl.appendChild(s)});
+document.querySelectorAll('.opt').forEach(o=>o.addEventListener('click',()=>{o.parentElement.querySelectorAll('.opt').forEach(x=>x.classList.remove('selected'));o.classList.add('selected');cfg[o.parentElement.dataset.field]=o.dataset.v}));
+function go(n){step=n;panels.forEach((p,i)=>p.classList.toggle('active',i===n));document.querySelectorAll('.step').forEach((s,i)=>{s.classList.toggle('active',i===n);s.classList.toggle('done',i<n)})}
+document.querySelectorAll('.next').forEach(b=>b.addEventListener('click',()=>go(step+1)));
+document.getElementById('generate').onclick=()=>{
+  cfg.hazop=+document.getElementById('hazopMax').value;
+  const base={cement:3200,hydraulic:2800,steel:3500,paper:3000,custom:2900}[cfg.plant];
+  const llmAdd={gemini:900,llama:400,custom:600}[cfg.llm];
+  const outAdd={sop:0,plc:200,full:450}[cfg.outputs];
+  const cost=base+llmAdd+outAdd;
+  document.getElementById('costEst').textContent='$'+cost.toLocaleString()+' / month';
+  const yaml=`# GenTwin v1.0.0\nplant:\n  type: ${cfg.plant}\nedge:\n  device: ${cfg.edge}\nllm:\n  mode: ${cfg.llm}\nsafety:\n  hazop_ps1_max_bar: ${cfg.hazop}\noutputs: ${cfg.outputs}\nsensors: [PS1, PS2, TS1, TS2, Torque, Speed, Wear]`;
+  document.getElementById('yamlOut').textContent=yaml;
+  document.getElementById('dockerOut').textContent=`services:\n  gentwin-edge:\n    image: twinguard/gentwin-edge:1.0.0\n    devices: [${cfg.edge}]\n  chromadb:\n    image: chromadb/chroma:latest\n  influxdb:\n    image: influxdb:2.7`;
+  document.getElementById('checklist').innerHTML=['<li>'+cfg.edge+' provisioned with &lt;15MB ML bundle</li>','<li>OPC-UA endpoint configured</li>','<li>IT/OT firewall rules for L3</li>','<li>HAZOP limits signed off by HSE</li>'].join('');
+  document.getElementById('results').classList.add('show');
+  document.getElementById('dlYaml').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([yaml]));a.download='gentwin-config.yaml';a.click()};
+  go(4);
+};
+</script>
+</body>
+</html>
